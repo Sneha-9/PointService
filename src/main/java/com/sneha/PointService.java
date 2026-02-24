@@ -61,7 +61,7 @@ public class PointService {
         for (PointDao p : pointDao) {
             result.add(UserPointData.newBuilder()
                     .setPoint(Point.newBuilder().setValue(p.getAggregatedPoints()))
-                    .setId(p.getId()).build());
+                    .setId(p.getRecordId()).build());
         }
         return result;
 
