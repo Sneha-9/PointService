@@ -22,7 +22,7 @@ public interface PointRepository extends JpaRepository<PointDao, String> {
     List<PointDao> findByMinPoint(@Param("minPoint") int minPoint);
 
     @Transactional
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("update PointDao e set e.aggregatedPoints = e.aggregatedPoints + :input where e.recordId = :id")
     int aggregatePoint(@Param("id") String id, @Param("input") int input);
 

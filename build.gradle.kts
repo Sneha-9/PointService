@@ -18,6 +18,7 @@ protobuf {
     }
 }
 
+
 sourceSets {
     main {
         proto {
@@ -47,6 +48,16 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:4.33.5")
 
     implementation("com.hubspot.jackson:jackson-datatype-protobuf:0.9.18")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
+
+    testImplementation("org.testcontainers:junit-jupiter:1.21.4")
+    testImplementation("org.testcontainers:testcontainers:1.21.4")
+    testImplementation("org.testcontainers:postgresql:1.21.4")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:4.0.3")
+    testImplementation("org.springframework.boot:spring-boot-resttestclient:4.0.3")
 
 }
 

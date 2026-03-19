@@ -41,4 +41,8 @@ public class PointDao {
     @UpdateTimestamp
     @Column(name = "updatedat")
     private LocalDateTime updatedAt;
+
+    public int getAggregatedPoints() {
+        return aggregatedPoints;
+    }
 }

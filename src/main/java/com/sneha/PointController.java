@@ -1,9 +1,9 @@
 package com.sneha;
 
+import com.sneha.exception.SystemException;
 import com.sneha.pointservice.*;
-import com.google.gson.Gson;
+import com.sneha.service.PointService;
 import lombok.AllArgsConstructor;
-import okhttp3.OkHttpClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +23,7 @@ public class PointController {
    }
 
    @PostMapping(value= "/point/users", produces = "application/json")
-    GetUserPointResponse getUserPoints(@RequestBody GetUserPointRequest getUserPointRequest){
+    GetUserPointResponse getUserPoints(@RequestBody GetUserPointRequest getUserPointRequest) throws SystemException {
       List<UserPointData> result = pointService.getUserPoint(getUserPointRequest.getMinPoint());
 
       return  GetUserPointResponse.newBuilder().addAllPoints(result).build();
