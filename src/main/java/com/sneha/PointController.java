@@ -16,13 +16,13 @@ public class PointController {
 
     private PointService pointService;
 
-   @PostMapping(value = "/point/aggregator/user", produces = "application/json")
+   @PostMapping(value = Constant.AGGREGATE_POINT_PATH, produces = Constant.JSON_RESPONSE_MEDIA_TYPE)
     UserPointAggregationResponse aggregateUserPoint(@RequestBody UserPointAggregationRequest userPointAggregationRequest) throws Exception {
        int result =  pointService.aggregatePoint(userPointAggregationRequest.getPoint(),userPointAggregationRequest.getId());
        return   UserPointAggregationResponse.newBuilder().setAggregatedPoint(result).build();
    }
 
-   @PostMapping(value= "/point/users", produces = "application/json")
+   @PostMapping(value= Constant.GET_POINTS_PATH , produces = Constant.JSON_RESPONSE_MEDIA_TYPE)
     GetUserPointResponse getUserPoints(@RequestBody GetUserPointRequest getUserPointRequest) throws SystemException {
       List<UserPointData> result = pointService.getUserPoint(getUserPointRequest.getMinPoint());
 

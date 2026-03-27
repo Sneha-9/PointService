@@ -2,6 +2,7 @@ plugins {
     id("org.springframework.boot") version "4.0.3"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.9.6"
+    id ("jacoco")
     application
 }
 
@@ -63,6 +64,24 @@ dependencies {
 
 tasks.withType<ProcessResources> {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.test {
+    useJUnitPlatform()
+
+    finalizedBy(tasks.jacocoTestReport, tasks.jacocoTestCoverageVerification)
+}
+
+
+tasks.jacocoTestReport {
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude("com/sneha/error**","com/sneha/Constant**","com/sneha/Main**","com/sneha/userservice**", "com/sneha/pointservice**","com/sneha/rankingservice**")
+            }
+        })
+    )
 }
 
 application {

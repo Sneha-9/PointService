@@ -22,12 +22,12 @@ public class AppConfig {
     public ObjectMapper getObjectMapper() {
         return JsonMapper.builder()
                 .addModule(new ProtobufModule())
-                .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE) // Force camelCase
+                .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .build();
     }
 
-    // This bean tells Spring how to turn JSON into Protobuf objects
+
     @Bean
     public ProtobufJsonFormatHttpMessageConverter protobufHttpMessageConverter() {
         return new ProtobufJsonFormatHttpMessageConverter();

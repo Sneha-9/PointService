@@ -2,7 +2,9 @@ From gradle:9.0.0-jdk21 AS build
 
 WORKDIR /app
 
-COPY --chown=gradle:gradle . .
+COPY --chown=gradle:gradle build.gradle.kts settings.gradle.kts ./
+#
+COPY --chown=gradle:gradle src ./src
 
 RUN gradle clean build -x test
 

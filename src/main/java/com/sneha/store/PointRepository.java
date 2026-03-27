@@ -1,5 +1,6 @@
 package com.sneha.store;
 
+import com.sneha.exception.SystemException;
 import com.sneha.model.PointDao;
 import com.sneha.pointservice.UserPointData;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,14 +17,14 @@ import java.util.Optional;
 public interface PointRepository extends JpaRepository<PointDao, String> {
 
     @Query
-    Optional<PointDao> findByRecordId(String recordId);
+    Optional<PointDao> findByRecordId(String recordId) throws Exception;
 
     @Query("select u from PointDao u where u.aggregatedPoints >= :minPoint")
-    List<PointDao> findByMinPoint(@Param("minPoint") int minPoint);
+    List<PointDao> findByMinPoint(@Param("minPoint") int minPoint) throws Exception;
 
     @Transactional
     @Modifying(clearAutomatically = true)
     @Query("update PointDao e set e.aggregatedPoints = e.aggregatedPoints + :input where e.recordId = :id")
-    int aggregatePoint(@Param("id") String id, @Param("input") int input);
+    int aggregatePoint(@Param("id") String id, @Param("input") int input) throws Exception;
 
 }

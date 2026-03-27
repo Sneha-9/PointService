@@ -1,8 +1,13 @@
 package com.sneha.exception;
 
-import com.sneha.model.ErrorResponse;
+
+import com.sneha.errorservice.ErrorResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
+
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -11,24 +16,27 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<Object> handleValidationException(ValidationException ex) {
-        ErrorResponse error = new ErrorResponse(ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex) {
 
-        return new ResponseEntity<>(error,  HttpStatus.BAD_REQUEST);
+        return getResponseEntity(ex,  HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(SystemException.class)
-    public ResponseEntity<Object> handleSystemException(SystemException ex) {
-        ErrorResponse error = new ErrorResponse(ex.getMessage());
-
-        return new ResponseEntity<>(error,  HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ErrorResponse> handleSystemException(SystemException ex) {
+        return getResponseEntity(ex,  HttpStatus.INTERNAL_SERVER_ERROR);
     }
     @ExceptionHandler(InvalidUserException.class)
-    public ResponseEntity<Object> handleInvalidUserException(InvalidUserException ex) {
-        ErrorResponse error = new ErrorResponse(ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleInvalidUserException(InvalidUserException ex) {
 
-        return new ResponseEntity<>(error,  HttpStatus.INTERNAL_SERVER_ERROR);
+        return getResponseEntity(ex,  HttpStatus.BAD_REQUEST);
     }
 
 
+    private ResponseEntity<ErrorResponse> getResponseEntity(Exception ex, HttpStatus status) {
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ErrorResponse error = ErrorResponse.newBuilder().setMessage(ex.getMessage()).build();
+
+        return new ResponseEntity<>(error, headers, status);
+    }
 }

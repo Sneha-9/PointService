@@ -1,23 +1,17 @@
-import com.fasterxml.jackson.core.JsonProcessingException;
+package com.sneha;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.sneha.Constant;
-import com.sneha.Main;
-import com.sneha.TestConstant;
 import com.sneha.errorservice.ErrorResponse;
 import com.sneha.exception.SystemException;
-
-import com.sneha.model.PointDao;
-import com.sneha.pointservice.*;
+import com.sneha.pointservice.UserPointAggregationRequest;
 import com.sneha.store.PointRepository;
 import com.sneha.userservice.UserValidationResponse;
-import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -31,25 +25,19 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.mockito.Mockito.*;
-
-
+import static org.mockito.Mockito.doThrow;
 @SpringBootTest(
         classes = Main.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @Testcontainers
 @AutoConfigureRestTestClient
-public class E2ETest {
-
+public class E2EException {
+    @MockitoBean
+    private PointRepository pointRepository;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -74,13 +62,16 @@ public class E2ETest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
 
-      registry.add("userservice.host", () -> wireMockServer.baseUrl().replace("http://",""));
+        registry.add("userservice.host", () -> wireMockServer.baseUrl().replace("http://",""));
     }
 
-
+    @AfterEach
+    void resetMocks() {
+        Mockito.reset(pointRepository);
+    }
 
     @Test
-    void shouldValidateUserAsTrue() throws Exception {
+    void shouldTestSystemExceptionFindByRecordId() throws Exception {
         String id = TestConstant.ID;
         int point = TestConstant.POINTS;
 
@@ -95,6 +86,8 @@ public class E2ETest {
                         ))
         );
 
+        doThrow(SystemException.class).when(pointRepository).findByRecordId(TestConstant.ID);
+
         UserPointAggregationRequest aggregationRequest = UserPointAggregationRequest.newBuilder()
                 .setId(id)
                 .setPoint(point)
@@ -106,23 +99,20 @@ public class E2ETest {
                 .body(aggregationRequest)
                 .exchange();
 
-        responseSpec.expectStatus().isOk();
-
-        UserPointAggregationResponse aggregationResponse = responseSpec.expectBody(UserPointAggregationResponse.class)
+        ErrorResponse errorResponse = responseSpec.expectBody(ErrorResponse.class)
                 .returnResult()
-                        .getResponseBody();
+                .getResponseBody();
 
-        Assertions.assertNotNull(aggregationResponse);
-        Assertions.assertEquals(50,aggregationResponse.getAggregatedPoint());
+        Assertions.assertNotNull(errorResponse);
+        Assertions.assertEquals(Constant.SYSTEM_EXCEPTION_MESSAGE,errorResponse.getMessage());
     }
-
     @Test
-    void shouldThrowInvalidUserException() throws IOException {
+    void shouldTestSystemExceptionAggregatePoint() throws Exception {
         String id = TestConstant.ID;
         int point = TestConstant.POINTS;
 
         UserValidationResponse validationResponse = UserValidationResponse.newBuilder()
-                .setIsValid(false)
+                .setIsValid(true)
                 .build();
 
         wireMockServer.stubFor(
@@ -131,6 +121,9 @@ public class E2ETest {
                                 objectMapper.writeValueAsString(validationResponse)
                         ))
         );
+
+        doThrow(SystemException.class).when(pointRepository).aggregatePoint(id,point);
+
         UserPointAggregationRequest aggregationRequest = UserPointAggregationRequest.newBuilder()
                 .setId(id)
                 .setPoint(point)
@@ -141,40 +134,6 @@ public class E2ETest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(aggregationRequest)
                 .exchange();
-
-        responseSpec.expectStatus().is4xxClientError();
-
-        ErrorResponse errorResponse = responseSpec.expectBody(ErrorResponse.class)
-                .returnResult()
-                .getResponseBody();
-
-        Assertions.assertNotNull(errorResponse);
-        Assertions.assertEquals(Constant.USER_ID_EXCEPTION_MESSAGE,errorResponse.getMessage());
-    }
-
-    @Test
-    void shouldThrowSystemExceptionWhileCallingUserService() throws IOException {
-        String id = TestConstant.ID;
-        int point = TestConstant.POINTS;
-
-        wireMockServer.stubFor(
-                post(TestConstant.USER_VALIDATION_PATH).willReturn(
-                        ok(
-                                objectMapper.writeValueAsString(SystemException.class)
-                        ))
-        );
-        UserPointAggregationRequest aggregationRequest = UserPointAggregationRequest.newBuilder()
-                .setId(id)
-                .setPoint(point)
-                .build();
-
-        RestTestClient.ResponseSpec responseSpec = restTestClient.post()
-                .uri(Constant.AGGREGATE_POINT_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(aggregationRequest)
-                .exchange();
-
-        responseSpec.expectStatus().is5xxServerError();
 
         ErrorResponse errorResponse = responseSpec.expectBody(ErrorResponse.class)
                 .returnResult()
@@ -185,7 +144,7 @@ public class E2ETest {
     }
 
     @Test
-    void shouldReturnListOfUsers() throws IOException {
+    void shouldTestSystemExceptionFindByMinPoint() throws Exception {
         String id = TestConstant.ID;
         int point = TestConstant.POINTS;
 
@@ -199,6 +158,9 @@ public class E2ETest {
                                 objectMapper.writeValueAsString(validationResponse)
                         ))
         );
+
+        doThrow(SystemException.class).when(pointRepository).findByMinPoint(point);
+
         UserPointAggregationRequest aggregationRequest = UserPointAggregationRequest.newBuilder()
                 .setId(id)
                 .setPoint(point)
@@ -210,34 +172,12 @@ public class E2ETest {
                 .body(aggregationRequest)
                 .exchange();
 
-        responseSpec.expectStatus().isOk();
-
-        UserPointAggregationResponse aggregationResponse = responseSpec.expectBody(UserPointAggregationResponse.class)
+        ErrorResponse errorResponse = responseSpec.expectBody(ErrorResponse.class)
                 .returnResult()
                 .getResponseBody();
 
-        GetUserPointRequest getUserPointRequest = GetUserPointRequest.newBuilder()
-                .setMinPoint(point)
-                .build();
-
-        List<UserPointData> expectedUsersResponse = new ArrayList<>();
-        expectedUsersResponse.add(UserPointData
-                .newBuilder()
-                        .setId(id)
-                .setPoint(Point.newBuilder().setValue(aggregationResponse.getAggregatedPoint()).build())
-                .build());
-
-        RestTestClient.ResponseSpec getUsersResponseSpec = restTestClient.post()
-                .uri(Constant.GET_POINTS_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(getUserPointRequest)
-                .exchange();
-
-        GetUserPointResponse getUserPointResponseResponse = getUsersResponseSpec.expectBody(GetUserPointResponse.class)
-                .returnResult()
-                .getResponseBody();
-        getUsersResponseSpec.expectStatus().isOk();
-        Assertions.assertEquals(expectedUsersResponse, getUserPointResponseResponse.getPointsList());
-
+        Assertions.assertNotNull(errorResponse);
+        Assertions.assertEquals(Constant.SYSTEM_EXCEPTION_MESSAGE,errorResponse.getMessage());
     }
+
 }
