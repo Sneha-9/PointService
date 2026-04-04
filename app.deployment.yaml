@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pointservice
+  namespace: psn
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pointservice
+  template:
+    metadata:
+      labels:
+        app: pointservice
+    spec:
+      containers:
+        - name: pointservice
+          image: sneha0911/pointservice:latest
+          env:
+            - name: DB_HOST
+              value: "pointservice-db-h"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "pointservice"
+            - name: DB_USERNAME
+              value: "sneha"
+            - name: DB_PASSWORD
+              value: "password"
+            - name : USER_SERVICE_HOST
+              value: userservice.userservicenamespace
+          ports:
+            - containerPort: 8092

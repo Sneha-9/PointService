@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pointservice-svc
+  namespace: psn
+spec:
+  selector:
+    app: pointservice
+  ports:
+    - protocol: TCP
+      port: 80         # Port the service listens on inside the cluster
+      targetPort: 8092 # The port your app runs on inside the pod
+  type: ClusterIP
