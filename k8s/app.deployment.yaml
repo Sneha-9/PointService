@@ -27,6 +27,6 @@ spec:
             - name: DB_PASSWORD
               value: "password"
             - name : USER_SERVICE_HOST
-              value: userservice.userservicenamespace
+              value: userservice
           ports:
             - containerPort: 8092
