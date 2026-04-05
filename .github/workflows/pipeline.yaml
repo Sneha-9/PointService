@@ -57,4 +57,43 @@ jobs:
         with:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/pointservice:latest
-          platforms: linux/amd64,linux/arm64
+          #platforms: linux/amd64,linux/arm64
+  deploy:
+    needs: publish
+    name: Deployment
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.29.0'
+
+          # Configure kubeconfig
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Deploy to K8s
+        run: |
+          kubectl apply -f k8s/database.service.yaml
+          
+          kubectl apply -f k8s/database.pod.yaml
+          
+          kubectl rollout status statefulset/pointservice-db --timeout=90s
+          
+          

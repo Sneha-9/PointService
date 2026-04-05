@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
-  namespace: psn
 spec:
   rules:
     - host: pointservice.localhost
@@ -12,6 +11,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: pointservice
+                name: pointservice-svc
                 port:
                   number: 80 # This matches the 'port' from the Service above
